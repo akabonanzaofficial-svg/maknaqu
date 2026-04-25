@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS MaknaQu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center text-slate-800">Admin MaknaQu</h1>
+        
+        <form action="URL_WEB_APP_GOOGLE_SCRIPT_KAMU" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Password Panel</label>
+                <input type="password" name="password" class="w-full p-3 rounded-xl border mt-1" required>
+            </div>
+            <hr>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Kata</label>
+                <input type="text" name="word" class="w-full p-3 rounded-xl border mt-1" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Makna Positif</label>
+                <textarea name="positif" class="w-full p-3 rounded-xl border mt-1"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Makna Negatif</label>
+                <textarea name="negatif" class="w-full p-3 rounded-xl border mt-1"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Keterangan</label>
+                <input type="text" name="keterangan" class="w-full p-3 rounded-xl border mt-1">
+            </div>
+            <button type="submit" class="w-full bg-yellow-400 text-neutral-900 py-3 rounded-xl font-bold hover:bg-yellow-500 transition-all">
+                Kirim ke Google Sheets
+            </button>
+        </form>
+    </div>
+</body>
+</html>
