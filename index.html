@@ -127,7 +127,7 @@
         // ==========================================
         const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnp6kkrTJnRs9gzJoEIrICv5p77-slw75C6ilwrDynFIOZmOgBGKUrKqfoaQF7n6tmiBwY8vzCczdb/pub?output=csv'; 
         
-        // PASTE URL WEB APP DARI GOOGLE APPS SCRIPT DI BAWAH INI:
+        // URL WEB APP DARI GOOGLE APPS SCRIPT:
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec';
 
         let state = {
@@ -360,7 +360,7 @@
                 userLoginForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
-                    if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
+                    if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_DI_SINI') {
                         alert("PENTING: Anda belum memasukkan URL Google Apps Script di dalam kode HTML.");
                         return;
                     }
@@ -412,7 +412,7 @@
                 cmsForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
-                    if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
+                    if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_DI_SINI') {
                         alert("PENTING: Anda belum memasukkan URL Google Apps Script.");
                         return;
                     }
