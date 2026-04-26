@@ -32,7 +32,7 @@
 <body class="min-h-screen bg-slate-50 font-sans text-slate-800">
 
     <!-- LOGIN PENGUNJUNG OVERLAY -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-50 z-[100] flex items-center justify-center p-4">
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-50 flex items-center justify-center p-4" style="z-index: 9999;">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center">
             <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="lock" class="w-8 h-8"></i>
@@ -137,159 +137,11 @@
             results: { kauniyah: [], quran: [] },
             fullKauniyahDatabase: []
         };
-
-        const searchInput = document.getElementById('searchInput');
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const mainContent = document.getElementById('mainContent');
-        const searchIconContainer = document.getElementById('searchIconContainer');
         let searchTimeout = null;
 
         // ==========================================
-        // 1.5. FUNGSI LOGIN PENGUNJUNG
+        // 2. FUNGSI LOGIKA DATA (GLOBAL)
         // ==========================================
-        document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
-                alert("PENTING: Anda belum memasukkan URL Google Apps Script di dalam kode HTML.");
-                return;
-            }
-
-            const password = document.getElementById('userPass').value;
-            const btn = document.getElementById('userLoginBtn');
-            
-            btn.disabled = true;
-            btn.innerHTML = `<div class="loader" style="border-top-color: white; width:20px; height:20px;"></div>`;
-
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    redirect: 'follow',
-                    body: JSON.stringify({ action: 'login', password: password })
-                });
-
-                const result = await response.json();
-
-                if(result.status === 'success') {
-                    // Login berhasil: Sembunyikan form login, tampilkan aplikasi
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    document.getElementById('loginOverlay').classList.remove('flex');
-                    document.getElementById('appContainer').classList.remove('hidden');
-                    
-                    // Mulai muat database Google Sheet setelah login berhasil
-                    initKauniyahDatabase().then(() => {
-                        lucide.createIcons();
-                        render();
-                    });
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Terjadi kesalahan jaringan atau Apps Script belum dikonfigurasi dengan benar.");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="unlock" class="w-5 h-5"></i> Masuk`;
-                lucide.createIcons();
-            }
-        });
-
-        // ==========================================
-        // 2. FUNGSI CMS (ADMIN PANEL)
-        // ==========================================
-        function openAdminModal(action, id = null) {
-            const modal = document.getElementById('adminModal');
-            document.getElementById('formAction').value = action;
-            document.getElementById('editId').value = id || '';
-            
-            if(action === 'update' && id) {
-                // Cari data berdasarkan ID untuk diisi ke form
-                const item = state.fullKauniyahDatabase.find(x => x.id === id);
-                if(item) {
-                    document.getElementById('modalTitle').innerHTML = `<i data-lucide="edit" class="text-yellow-500"></i> Edit Data`;
-                    document.getElementById('newWord').value = item.word;
-                    document.getElementById('newPositif').value = item.maknaPositif;
-                    document.getElementById('newNegatif').value = item.maknaNegatif;
-                    document.getElementById('newKet').value = item.keterangan;
-                }
-            } else {
-                document.getElementById('modalTitle').innerHTML = `<i data-lucide="plus-circle" class="text-yellow-500"></i> Tambah Data`;
-                document.getElementById('cmsForm').reset();
-                document.getElementById('formAction').value = 'add';
-            }
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-            document.getElementById('adminPass').focus();
-        }
-
-        function closeAdminModal() {
-            const modal = document.getElementById('adminModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.getElementById('cmsForm').reset();
-        }
-
-        document.getElementById('cmsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
-                alert("PENTING: Anda belum memasukkan URL Google Apps Script di dalam kode HTML.");
-                return;
-            }
-
-            const btn = document.getElementById('submitBtn');
-            
-            const payload = {
-                password: document.getElementById('adminPass').value,
-                action: document.getElementById('formAction').value,
-                id: document.getElementById('editId').value,
-                word: document.getElementById('newWord').value,
-                positif: document.getElementById('newPositif').value,
-                negatif: document.getElementById('newNegatif').value,
-                keterangan: document.getElementById('newKet').value
-            };
-
-            btn.disabled = true;
-            btn.innerHTML = `<div class="loader"></div> Menyimpan...`;
-
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    redirect: 'follow', 
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if(result.status === 'success') {
-                    alert(result.message);
-                    closeAdminModal();
-                    await initKauniyahDatabase(); 
-                    executeSearch(); 
-                } else {
-                    alert("Gagal: " + result.message); 
-                }
-                
-            } catch (error) {
-                console.error(error);
-                alert("Terjadi kesalahan jaringan atau CORS.\n\nPASTIKAN:\n1. URL Apps Script sudah benar (berakhiran /exec)\n2. Deploy disetting: Yang memiliki akses -> 'Siapa Saja' (Anyone)\n3. Buat 'Deployment Baru' setiap mengubah kode script.");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> Simpan Data`;
-                lucide.createIcons();
-            }
-        });
-
-        // ==========================================
-        // 3. LOGIKA PENCARIAN & DATA
-        // ==========================================
-
         function parseCSV(csvText) {
             const rows = csvText.split(/\r?\n/);
             const data = [];
@@ -370,30 +222,17 @@
             setLoading(false); render();
         }
 
-        // ==========================================
-        // 4. RENDER UI
-        // ==========================================
-        searchInput.addEventListener('input', (e) => {
-            state.query = e.target.value;
-            if (searchTimeout) clearTimeout(searchTimeout);
-            if(state.query.trim()) setLoading(true);
-            searchTimeout = setTimeout(() => { executeSearch(); }, 800); 
-        });
-
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                state.activeTab = e.currentTarget.getAttribute('data-tab');
-                updateTabUI(); render();
-            });
-        });
-
         function setLoading(isLoading) {
             state.isLoading = isLoading;
-            searchIconContainer.innerHTML = isLoading ? `<div class="loader"></div>` : `<i data-lucide="search" class="w-6 h-6 text-yellow-500"></i>`;
-            if(!isLoading) lucide.createIcons();
+            const searchIconContainer = document.getElementById('searchIconContainer');
+            if (searchIconContainer) {
+                searchIconContainer.innerHTML = isLoading ? `<div class="loader"></div>` : `<i data-lucide="search" class="w-6 h-6 text-yellow-500"></i>`;
+                if(!isLoading) lucide.createIcons();
+            }
         }
 
         function updateTabUI() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
             tabButtons.forEach(btn => {
                 const tab = btn.getAttribute('data-tab');
                 btn.className = (tab === state.activeTab) 
@@ -403,6 +242,9 @@
         }
 
         function render() {
+            const mainContent = document.getElementById('mainContent');
+            if (!mainContent) return;
+
             if (state.isLoading) {
                 mainContent.innerHTML = `<div class="text-center py-12"><div class="loader mx-auto mb-4"></div><p class="text-slate-400">Mencari makna...</p></div>`;
                 return;
@@ -419,7 +261,7 @@
                     html += `<div class="mb-8"><h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Kauniyah (${state.results.kauniyah.length})</h2><div class="grid gap-4 md:grid-cols-2">`;
                     html += state.results.kauniyah.map(item => `
                         <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative group">
-                            <!-- Tombol Edit Tersembunyi (Muncul saat dihover) -->
+                            <!-- Tombol Edit Tersembunyi -->
                             <button onclick="openAdminModal('update', '${item.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-500 bg-slate-50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
@@ -449,8 +291,176 @@
             lucide.createIcons();
         }
 
-        // Jalankan lucide icons untuk form login awal
-        lucide.createIcons();
+        // ==========================================
+        // 3. FUNGSI MODAL ADMIN (GLOBAL)
+        // ==========================================
+        function openAdminModal(action, id = null) {
+            const modal = document.getElementById('adminModal');
+            document.getElementById('formAction').value = action;
+            document.getElementById('editId').value = id || '';
+            
+            if(action === 'update' && id) {
+                const item = state.fullKauniyahDatabase.find(x => x.id === id);
+                if(item) {
+                    document.getElementById('modalTitle').innerHTML = `<i data-lucide="edit" class="text-yellow-500"></i> Edit Data`;
+                    document.getElementById('newWord').value = item.word;
+                    document.getElementById('newPositif').value = item.maknaPositif;
+                    document.getElementById('newNegatif').value = item.maknaNegatif;
+                    document.getElementById('newKet').value = item.keterangan;
+                }
+            } else {
+                document.getElementById('modalTitle').innerHTML = `<i data-lucide="plus-circle" class="text-yellow-500"></i> Tambah Data`;
+                document.getElementById('cmsForm').reset();
+                document.getElementById('formAction').value = 'add';
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+            document.getElementById('adminPass').focus();
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('adminModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('cmsForm').reset();
+        }
+
+        // ==========================================
+        // 4. PENGIKATAN EVENT (Setelah HTML Selesai Dimuat)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render icon gembok & tombol di awal
+            lucide.createIcons();
+
+            // Event Listener Pencarian
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    state.query = e.target.value;
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    if(state.query.trim()) setLoading(true);
+                    searchTimeout = setTimeout(() => { executeSearch(); }, 800); 
+                });
+            }
+
+            // Event Listener Tombol Tab (Kauniyah/Harfiyah)
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    state.activeTab = e.currentTarget.getAttribute('data-tab');
+                    updateTabUI(); render();
+                });
+            });
+
+            // Event Listener Login Pengunjung
+            const userLoginForm = document.getElementById('userLoginForm');
+            if (userLoginForm) {
+                userLoginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
+                        alert("PENTING: Anda belum memasukkan URL Google Apps Script di dalam kode HTML.");
+                        return;
+                    }
+
+                    const password = document.getElementById('userPass').value;
+                    const btn = document.getElementById('userLoginBtn');
+                    
+                    btn.disabled = true;
+                    btn.innerHTML = `<div class="loader" style="border-top-color: white; width:20px; height:20px;"></div>`;
+
+                    try {
+                        const response = await fetch(APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            redirect: 'follow',
+                            body: JSON.stringify({ action: 'login', password: password })
+                        });
+
+                        const result = await response.json();
+
+                        if(result.status === 'success') {
+                            // Sembunyikan form login, tampilkan aplikasi utama
+                            document.getElementById('loginOverlay').classList.add('hidden');
+                            document.getElementById('loginOverlay').classList.remove('flex');
+                            document.getElementById('appContainer').classList.remove('hidden');
+                            
+                            // Load data setelah berhasil login
+                            initKauniyahDatabase().then(() => {
+                                lucide.createIcons();
+                                render();
+                            });
+                        } else {
+                            alert(result.message);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Terjadi kesalahan jaringan. Cek kembali URL Apps Script Anda.");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i data-lucide="unlock" class="w-5 h-5"></i> Masuk`;
+                        lucide.createIcons();
+                    }
+                });
+            }
+
+            // Event Listener Form CMS Admin
+            const cmsForm = document.getElementById('cmsForm');
+            if (cmsForm) {
+                cmsForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    if(APPS_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec') {
+                        alert("PENTING: Anda belum memasukkan URL Google Apps Script.");
+                        return;
+                    }
+
+                    const btn = document.getElementById('submitBtn');
+                    const payload = {
+                        password: document.getElementById('adminPass').value,
+                        action: document.getElementById('formAction').value,
+                        id: document.getElementById('editId').value,
+                        word: document.getElementById('newWord').value,
+                        positif: document.getElementById('newPositif').value,
+                        negatif: document.getElementById('newNegatif').value,
+                        keterangan: document.getElementById('newKet').value
+                    };
+
+                    btn.disabled = true;
+                    btn.innerHTML = `<div class="loader"></div> Menyimpan...`;
+
+                    try {
+                        const response = await fetch(APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            redirect: 'follow', 
+                            body: JSON.stringify(payload)
+                        });
+
+                        const result = await response.json();
+
+                        if(result.status === 'success') {
+                            alert(result.message);
+                            closeAdminModal();
+                            await initKauniyahDatabase(); 
+                            executeSearch(); 
+                        } else {
+                            alert("Gagal: " + result.message); 
+                        }
+                        
+                    } catch (error) {
+                        console.error(error);
+                        alert("Terjadi kesalahan. Pastikan URL Apps Script benar dan di-deploy 'Siapa Saja'.");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> Simpan Data`;
+                        lucide.createIcons();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
