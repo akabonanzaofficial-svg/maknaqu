@@ -2,10 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaknaQu - Kauniyah & Harfiyah</title>
-    <link rel="icon" type="logo-maknaqu.png" href="logo-maknaqu.png">
-    <link rel="apple-touch-icon" href="logo-maknaqu.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MaknaQu - Eksplorasi Makna & Amalan</title>
+    <!-- LOGO UNTUK ICON BROWSER (FAVICON) -->
+    <link rel="icon" type="image/png" href="logo-maknaqu.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
@@ -14,38 +15,47 @@
         .font-arabic { font-family: 'Amiri', serif; }
         .dir-rtl { direction: rtl; text-align: right; }
         
-        /* Animasi Loading */
         .loader {
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #eab308;
-            width: 24px;
-            height: 24px;
+            border: 3px solid #f3f3f3; border-radius: 50%;
+            border-top: 3px solid #eab308; width: 24px; height: 24px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Modal Blur */
-        #adminModal.flex { backdrop-blur: 4px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #adminModal.flex, #readerModal.flex { backdrop-blur: 4px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .prose-custom p { margin-bottom: 1rem; line-height: 1.7; color: #334155; }
+        .prose-custom ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: decimal; }
+        .prose-custom li { margin-bottom: 0.5rem; }
+        
+        body { padding-bottom: 90px; }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 font-sans text-slate-800">
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 overflow-x-hidden">
+
+    <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
 
     <!-- LOGIN PENGUNJUNG OVERLAY -->
     <div id="loginOverlay" class="fixed inset-0 bg-slate-50 flex items-center justify-center p-4" style="z-index: 9999;">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center fade-in">
             
-            <!-- Tempat Logo Baru (Pengganti Icon Gembok) -->
-            <div class="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                <img src="logo-maknaqu.png" alt="Logo MaknaQu" class="w-full h-full object-contain drop-shadow-sm">
+            <!-- LOGO DAN LABEL VERSI (Diperbaiki agar tidak hilang) -->
+            <div class="mb-6 flex flex-col items-center justify-center">
+                <img src="logo-maknaqu.png" alt="Logo MaknaQu" class="w-24 h-24 mb-3 object-contain drop-shadow-md rounded-2xl">
+                <span class="bg-slate-50 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full tracking-widest border border-slate-200 shadow-sm">
+                    VERSI 02
+                </span>
             </div>
-
+            
             <h2 class="text-2xl font-bold mb-2 text-slate-800">Akses MaknaQu</h2>
-            <p class="text-sm text-slate-500 mb-6">Masukkan kata sandi untuk mengakses aplikasi.</p>
+            <p class="text-sm text-slate-500 mb-6">Masukkan kata sandi untuk mengeksplorasi ilmu dan makna.</p>
             <form id="userLoginForm" class="space-y-4">
-                <input type="password" id="userPass" placeholder="Kata Sandi Akses" class="w-full p-4 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none bg-slate-50 text-center" required>
+                <input type="password" id="userPass" placeholder="Kata Sandi" class="w-full p-4 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none bg-slate-50 text-center font-bold tracking-widest" required>
                 <button type="submit" id="userLoginBtn" class="w-full bg-yellow-500 text-white py-4 rounded-xl font-bold hover:bg-yellow-600 transition-all shadow-lg shadow-yellow-500/30 flex items-center justify-center gap-2">
                     <i data-lucide="unlock" class="w-5 h-5"></i> Masuk
                 </button>
@@ -53,136 +63,218 @@
         </div>
     </div>
 
-    <!-- WRAPPER UTAMA APLIKASI (Disembunyikan saat awal) -->
-    <div id="appContainer" class="hidden">
-        <header class="bg-neutral-900 text-white p-6 shadow-md rounded-b-3xl mb-6 max-w-4xl mx-auto relative">
+    <!-- WRAPPER UTAMA APLIKASI -->
+    <div id="appContainer" class="hidden fade-in relative">
+        
+        <header class="bg-neutral-900 text-white p-6 shadow-md rounded-b-3xl mb-6 max-w-4xl mx-auto relative sticky top-0 z-30">
             <div class="max-w-3xl mx-auto text-center">
-                <h1 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2 text-yellow-400">
+                <h1 id="headerTitle" class="text-3xl font-bold mb-1 flex items-center justify-center gap-2 text-yellow-400">
                     <i data-lucide="book-open" class="w-8 h-8"></i> MaknaQu
                 </h1>
-                <p class="text-neutral-300 opacity-90 text-sm">Eksplorasi Kauniyah & Pencari Ayat Harfiyah</p>
-            </div>
-            
-            <!-- Tombol Tambah Data -->
-            <button onclick="openAdminModal('add')" class="absolute top-4 right-4 text-[10px] bg-white/10 hover:bg-white/20 text-white/70 px-3 py-1 rounded-full flex items-center gap-1 transition-all border border-white/10">
-                <i data-lucide="plus" class="w-3 h-3"></i> Tambah
-            </button>
-
-            <div class="mt-8 max-w-2xl mx-auto relative">
-                <div class="relative flex items-center w-full h-14 rounded-full focus-within:shadow-lg bg-white overflow-hidden shadow-md">
-                    <div class="grid place-items-center h-full w-12 text-gray-300" id="searchIconContainer">
-                        <i data-lucide="search" class="w-6 h-6 text-yellow-500"></i>
-                    </div>
-                    <input class="peer h-full w-full outline-none text-sm text-gray-700 pr-4 bg-transparent" type="text" id="searchInput" placeholder="Cari kata kauniyah atau makna..." />
-                </div>
+                <p id="headerSubtitle" class="text-neutral-300 opacity-90 text-sm">Eksplorasi Kauniyah & Pencari Ayat Harfiyah</p>
             </div>
         </header>
 
-        <main class="max-w-4xl mx-auto px-4 pb-12">
-            <div class="flex justify-center gap-2 mb-8 bg-white p-1 rounded-full shadow-sm max-w-fit mx-auto border border-slate-200">
-                <button data-tab="all" class="tab-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-neutral-900 text-yellow-400 shadow-sm flex items-center gap-2">Semua</button>
-                <button data-tab="kauniyah" class="tab-btn px-6 py-2 rounded-full text-sm font-medium transition-all text-slate-600 hover:bg-slate-100 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Kauniyah</button>
-                <button data-tab="quran" class="tab-btn px-6 py-2 rounded-full text-sm font-medium transition-all text-slate-600 hover:bg-slate-100 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Harfiyah</button>
+        <!-- VIEW: HOME (PENCARIAN UTAMA) -->
+        <main id="view-home" class="view-section max-w-4xl mx-auto px-4 relative">
+            <div class="max-w-2xl mx-auto relative mb-6">
+                <div class="relative flex items-center w-full h-14 rounded-full focus-within:shadow-lg bg-white overflow-hidden shadow-sm border border-slate-200">
+                    <div class="grid place-items-center h-full w-12 text-slate-400" id="searchIconContainer">
+                        <i data-lucide="search" class="w-5 h-5 text-yellow-500"></i>
+                    </div>
+                    <input class="peer h-full w-full outline-none text-sm text-slate-700 pr-12 bg-transparent" type="text" id="searchInput" placeholder="Cari kata kauniyah, harfiyah, atau hadis..." />
+                    <button id="clearSearchBtn" class="absolute right-4 text-slate-300 hover:text-slate-500 hidden">
+                        <i data-lucide="x-circle" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
 
-            <div id="mainContent" class="space-y-6"></div>
+            <!-- TABS AREA: Kiri Tetap (Fixed), Kanan Bergeser (Scroll) -->
+            <div class="flex items-center mb-8 bg-white p-1 rounded-full shadow-sm max-w-full w-fit mx-auto border border-slate-200">
+                <div class="shrink-0 pr-2 mr-1 border-r border-slate-100 relative z-10 bg-white rounded-l-full">
+                    <button data-tab="all" class="home-tab-btn shrink-0 active px-5 py-2 rounded-full text-xs font-bold transition-all bg-neutral-900 text-yellow-400 shadow-sm flex items-center gap-2">Semua</button>
+                </div>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar scroll-smooth w-full pr-2">
+                    <button data-tab="kauniyah" class="home-tab-btn shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all text-slate-500 hover:bg-slate-100 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Kauniyah</button>
+                    <button data-tab="quran" class="home-tab-btn shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all text-slate-500 hover:bg-slate-100 flex items-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Harfiyah</button>
+                    <button data-tab="hadis" class="home-tab-btn shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all text-slate-500 hover:bg-slate-100 flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> Hadis</button>
+                </div>
+            </div>
+
+            <div id="mainContent" class="space-y-6 pb-6">
+                <div class="text-center py-12 text-slate-500 fade-in"><i data-lucide="search" class="w-12 h-12 mx-auto text-slate-200 mb-4 opacity-50"></i><p>Ketikkan kata untuk memulai eksplorasi makna.</p></div>
+            </div>
         </main>
-    </div> <!-- END WRAPPER UTAMA APLIKASI -->
+
+        <!-- VIEW: DALIL -->
+        <main id="view-dalil" class="view-section max-w-4xl mx-auto px-4 hidden fade-in relative">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+                <i data-lucide="library" class="text-yellow-500"></i> Kumpulan Panduan & Dalil
+            </h2>
+            <div id="dalilList" class="grid gap-4 md:grid-cols-2"></div>
+        </main>
+
+        <!-- VIEW: KAIFIYAH -->
+        <main id="view-kaifiyah" class="view-section max-w-4xl mx-auto px-4 hidden fade-in relative">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+                <i data-lucide="heart-handshake" class="text-yellow-500"></i> Panduan Amalan Kaifiyah
+            </h2>
+            <div id="kaifiyahList" class="space-y-3"></div>
+        </main>
+
+    </div>
+
+    <!-- SMART EDGE PANEL MINI -->
+    <!-- Garis Pemicu (Trigger) -->
+    <div id="smartPanelTrigger" onclick="toggleSmartPanel()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-neutral-400/40 w-1.5 h-16 rounded-l-full cursor-pointer z-40 transition-all duration-300 hover:bg-yellow-400 hover:w-2 hover:shadow-[-2px_0_10px_rgba(250,204,21,0.5)] group flex items-center">
+        <div class="absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <i data-lucide="chevron-left" class="w-5 h-5 text-yellow-500 drop-shadow-md"></i>
+        </div>
+    </div>
+
+    <!-- Lapisan transparan (hanya untuk mendeteksi klik di luar menu) -->
+    <div id="smartPanelOverlay" onclick="toggleSmartPanel()" class="fixed inset-0 z-40 hidden"></div>
+
+    <!-- Mini Pop-up Panel (Minimalis & Semi Transparan) -->
+    <div id="smartPanel" class="fixed right-3 top-1/2 -translate-y-1/2 bg-neutral-900/60 backdrop-blur-md p-2.5 rounded-2xl shadow-lg z-50 transform translate-x-16 opacity-0 pointer-events-none transition-all duration-300 ease-out border border-white/10 flex flex-col items-center">
+        <button onclick="toggleSmartPanel(); openAdminModal('add');" class="w-10 h-10 bg-white/20 text-yellow-400 rounded-xl flex items-center justify-center hover:bg-yellow-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all shadow-sm" title="Tambah Data">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="fixed bottom-0 w-full bg-neutral-900 border-t border-neutral-800 shadow-[0_-8px_20px_rgba(0,0,0,0.2)] z-30 pb-safe">
+        <div class="max-w-md mx-auto flex justify-around items-center h-16 px-4">
+            <button onclick="switchView('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center w-full h-full text-yellow-400 transition-colors">
+                <i data-lucide="home" class="w-5 h-5 mb-1 transition-transform scale-110"></i>
+                <span class="text-[10px] font-bold">Pencarian</span>
+            </button>
+            <button onclick="switchView('dalil')" id="nav-dalil" class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-yellow-400 transition-colors">
+                <i data-lucide="library" class="w-5 h-5 mb-1 transition-transform"></i>
+                <span class="text-[10px] font-bold">Dalil</span>
+            </button>
+            <button onclick="switchView('kaifiyah')" id="nav-kaifiyah" class="nav-btn flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-yellow-400 transition-colors">
+                <i data-lucide="heart-handshake" class="w-5 h-5 mb-1 transition-transform"></i>
+                <span class="text-[10px] font-bold">Kaifiyah</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- READER MODAL -->
+    <div id="readerModal" class="fixed inset-0 bg-slate-100/90 hidden flex-col z-50 transition-all">
+        <div class="bg-white px-4 py-4 shadow-sm flex items-center justify-between sticky top-0 z-10">
+            <button onclick="closeReader()" class="p-2 bg-slate-50 text-slate-600 rounded-full hover:bg-slate-200">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <span id="readerCategory" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kategori</span>
+            <button id="readerEditBtn" class="p-2 text-yellow-600 bg-yellow-50 rounded-full hover:bg-yellow-100">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative">
+            <img id="readerImage" src="" alt="Hero" class="w-full h-48 md:h-64 object-cover hidden">
+            <div class="p-6 md:p-8">
+                <h1 id="readerTitle" class="text-2xl md:text-3xl font-bold text-slate-800 mb-6 leading-tight pb-4 border-b border-slate-100">Judul</h1>
+                <div id="readerContent" class="prose-custom text-sm md:text-base"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- ADMIN MODAL -->
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 id="modalTitle" class="text-xl font-bold flex items-center gap-2 text-slate-800">
-                    <i data-lucide="database" class="text-yellow-500"></i> Kelola Data
-                </h2>
-                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+                <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-yellow-500"></i> Kelola Data</h2>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
             <form id="cmsForm" class="space-y-4">
-                <!-- Hidden Input untuk menyimpan ID saat mode Edit -->
                 <input type="hidden" id="editId" value="">
                 <input type="hidden" id="formAction" value="add">
 
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-500 ml-1">Autentikasi (Sistem Keamanan)</label>
-                    <input type="password" id="adminPass" placeholder="Masukkan Password Admin" class="w-full p-3 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none bg-rose-50" required>
-                </div>
-                <hr class="border-slate-100">
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-500 ml-1">Data Kata</label>
-                    <input type="text" id="newWord" placeholder="Kata (Contoh: Bintang)" class="w-full p-3 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none" required>
-                </div>
-                <textarea id="newPositif" placeholder="Makna Positif" class="w-full p-3 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none h-20"></textarea>
-                <textarea id="newNegatif" placeholder="Makna Negatif" class="w-full p-3 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none h-20"></textarea>
-                <input type="text" id="newKet" placeholder="Keterangan Tambahan" class="w-full p-3 rounded-xl border border-slate-200 focus:border-yellow-400 outline-none">
-                
-                <button type="submit" id="submitBtn" class="w-full bg-neutral-900 text-yellow-400 py-4 rounded-2xl font-bold hover:bg-neutral-800 transition-all flex items-center justify-center gap-2 mt-4 shadow-lg shadow-yellow-400/10">
-                    <i data-lucide="send" class="w-4 h-4"></i> Simpan Data
+                <input type="password" id="adminPass" placeholder="Password Admin" class="w-full p-3 rounded-xl border border-slate-200 outline-none bg-rose-50 text-sm" required>
+                <select id="itemCategory" onchange="adjustAdminForm()" class="w-full p-3 rounded-xl border border-slate-200 outline-none bg-slate-50 text-sm font-semibold">
+                    <option value="KAUNIYAH">Makna Kauniyah</option>
+                    <option value="HADIS">Dalil Hadis</option>
+                    <option value="PANDUAN_DALIL">Artikel Dalil</option>
+                    <option value="KAIFIYAH">Artikel Kaifiyah</option>
+                </select>
+                <input type="text" id="newWord" placeholder="Judul / Kata" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm" required>
+                <textarea id="newPositif" placeholder="Isi / Makna Positif" class="w-full p-3 rounded-xl border border-slate-200 outline-none h-24 text-sm" required></textarea>
+                <div id="containerNegatif"><textarea id="newNegatif" placeholder="Makna Negatif / Perawi" class="w-full p-3 rounded-xl border border-slate-200 outline-none h-20 text-sm"></textarea></div>
+                <input type="text" id="newKet" placeholder="Keterangan Tambahan (Opsional)" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm">
+                <input type="url" id="newImage" placeholder="URL Gambar / Link Foto (Opsional)" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm bg-slate-50">
+                <button type="submit" id="submitBtn" class="w-full bg-neutral-900 text-yellow-400 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan Data
                 </button>
             </form>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. PENGATURAN DATABASE & API
-        // ==========================================
-        const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnp6kkrTJnRs9gzJoEIrICv5p77-slw75C6ilwrDynFIOZmOgBGKUrKqfoaQF7n6tmiBwY8vzCczdb/pub?output=csv'; 
-        
-        // URL WEB APP DARI GOOGLE APPS SCRIPT:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJQxBQCFSwP5z6GqnS5rwne-va642iR4QEoUK8DCIY05iXTGQY97OCtt3zgr4enfJk/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE6Ln9Zvhu8GRRv0NrWjLsUYYILc7AwAKwQ6pryUtmNwq9dmZA3qkL3ns4cGwJSaOxZA/exec';
 
-        let state = {
-            query: '',
-            activeTab: 'all',
-            isLoading: false,
-            results: { kauniyah: [], quran: [] },
-            fullKauniyahDatabase: []
-        };
+        let state = { query: '', homeTab: 'all', isLoading: false, db: [], quran: [] };
         let searchTimeout = null;
 
-        // ==========================================
-        // 2. FUNGSI LOGIKA DATA (GLOBAL)
-        // ==========================================
-        function parseCSV(csvText) {
-            const rows = csvText.split(/\r?\n/);
-            const data = [];
-            for(let i = 1; i < rows.length; i++) {
-                if(!rows[i].trim()) continue;
-                const cols = [];
-                let curr = '';
-                let inQuotes = false;
-                for(let char of rows[i]) {
-                    if(char === '"') inQuotes = !inQuotes;
-                    else if(char === ',' && !inQuotes) { cols.push(curr); curr = ''; }
-                    else { curr += char; }
-                }
-                cols.push(curr);
-                
-                if(cols.length >= 2 && (cols[1] || '').trim() !== '') {
-                    data.push({
-                        id: (cols[0] || '').replace(/(^"|"$)/g, '').trim() || 'id_'+i, 
-                        word: (cols[1] || '').replace(/(^"|"$)/g, '').trim(),
-                        maknaPositif: (cols[2] || '').replace(/(^"|"$)/g, '').trim(),
-                        maknaNegatif: (cols[3] || '').replace(/(^"|"$)/g, '').trim(),
-                        keterangan: (cols[4] || '').replace(/(^"|"$)/g, '').trim()
-                    });
-                }
+        // --- FUNGSI SMART PANEL MINI ---
+        function toggleSmartPanel() {
+            const panel = document.getElementById('smartPanel');
+            const overlay = document.getElementById('smartPanelOverlay');
+            const trigger = document.getElementById('smartPanelTrigger');
+            
+            if (panel.classList.contains('opacity-0')) {
+                overlay.classList.remove('hidden');
+                trigger.classList.add('opacity-0', 'translate-x-4'); 
+                setTimeout(() => {
+                    panel.classList.remove('translate-x-16', 'opacity-0', 'pointer-events-none');
+                    panel.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                }, 10);
+            } else {
+                panel.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                panel.classList.add('translate-x-16', 'opacity-0', 'pointer-events-none');
+                trigger.classList.remove('opacity-0', 'translate-x-4'); 
+                setTimeout(() => overlay.classList.add('hidden'), 300);
             }
-            return data;
+            lucide.createIcons();
         }
 
-        async function initKauniyahDatabase() {
+        // FUNGSI ANTI-ERROR: Membersihkan teks kotor dari Google sebelum di-parse
+        function safeParseJSON(str) {
             try {
-                const cacheBuster = '&t=' + new Date().getTime();
-                const res = await fetch(GOOGLE_SHEETS_CSV_URL + cacheBuster);
-                const text = await res.text();
-                state.fullKauniyahDatabase = parseCSV(text);
-            } catch (err) {
-                console.error("Gagal load database", err);
+                let cleanStr = str.replace(/^[\u0000-\u001F\uFEFF]+|[\u0000-\u001F\uFEFF]+$/g, '').trim();
+                return JSON.parse(cleanStr);
+            } catch (e) {
+                const match = str.match(/\{[\s\S]*\}/);
+                if (match) {
+                    try { return JSON.parse(match[0]); } catch(e2) {}
+                }
+                throw new Error("Format data tidak valid dari server.");
+            }
+        }
+
+        async function initDatabase() {
+            try {
+                const url = APPS_SCRIPT_URL + '?action=getData&t=' + new Date().getTime();
+                const res = await fetch(url, { redirect: 'follow' });
+                const textData = await res.text();
+                
+                let result;
+                try {
+                    result = safeParseJSON(textData);
+                } catch (parseError) {
+                    console.error("Gagal parse:", textData);
+                    showToast("Sistem membaca data lama. Lakukan Deploy -> Versi Baru di Apps Script Anda.", "error");
+                    return;
+                }
+
+                const data = result.data ? result.data : result;
+                if (data.kauniyah || data.dalil || data.kaifiyah) {
+                    state.db = [...(data.kauniyah || []), ...(data.dalil || []), ...(data.kaifiyah || [])];
+                } else if (result.status === 'error') {
+                    showToast("Gagal memuat data: " + result.message, "error");
+                }
+            } catch (err) { 
+                showToast("Sistem gagal menarik data. Pastikan koneksi stabil.", "error");
             }
         }
 
@@ -190,8 +282,7 @@
             try {
                 const searchRes = await fetch(`https://api.quran.com/api/v4/search?q=${query}&size=3&language=id`);
                 const searchData = await searchRes.json();
-                const verses = searchData.search.results;
-                if (!verses) return [];
+                const verses = searchData.search?.results || [];
                 const quranResults = [];
                 for (const verse of verses) {
                     const verseKey = verse.verse_key;
@@ -199,9 +290,7 @@
                     const textRes = await fetch(`https://api.quran.com/api/v4/verses/by_key/${verseKey}?translations=33&fields=text_uthmani`);
                     const textData = await textRes.json();
                     quranResults.push({
-                        id: verseKey,
-                        surah: `Surah Ke-${surahNum}`,
-                        ayat: ayatNum,
+                        id: verseKey, surah: `Surah Ke-${surahNum}`, ayat: ayatNum,
                         arabic: textData.verse.text_uthmani,
                         translation: textData.verse.translations[0].text.replace(/<[^>]*>?/gm, '') 
                     });
@@ -211,260 +300,304 @@
         }
 
         async function executeSearch() {
-            const query = state.query.toLowerCase().trim();
+            const query = String(state.query || '').toLowerCase().trim();
             if (!query) {
-                state.results = { kauniyah: [], quran: [] };
-                setLoading(false); render(); return;
+                state.quran = []; setLoading(false); renderHomeSearch(); return;
             }
             setLoading(true);
-            const filteredKauniyah = state.fullKauniyahDatabase.filter(item => 
-                item.word.toLowerCase().includes(query) || 
-                item.maknaPositif.toLowerCase().includes(query) ||
-                item.keterangan.toLowerCase().includes(query)
-            );
-            const filteredQuran = await fetchQuranSearch(query);
-            state.results = { kauniyah: filteredKauniyah, quran: filteredQuran };
-            setLoading(false); render();
+            state.quran = await fetchQuranSearch(query);
+            setLoading(false); renderHomeSearch();
         }
 
         function setLoading(isLoading) {
-            state.isLoading = isLoading;
-            const searchIconContainer = document.getElementById('searchIconContainer');
-            if (searchIconContainer) {
-                searchIconContainer.innerHTML = isLoading ? `<div class="loader"></div>` : `<i data-lucide="search" class="w-6 h-6 text-yellow-500"></i>`;
+            const iconContainer = document.getElementById('searchIconContainer');
+            if (iconContainer) {
+                iconContainer.innerHTML = isLoading ? `<div class="loader" style="width:20px;height:20px;border-width:2px;"></div>` : `<i data-lucide="search" class="w-5 h-5 text-yellow-500"></i>`;
                 if(!isLoading) lucide.createIcons();
             }
         }
 
-        function updateTabUI() {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(btn => {
-                const tab = btn.getAttribute('data-tab');
-                btn.className = (tab === state.activeTab) 
-                    ? "tab-btn px-6 py-2 rounded-full text-sm font-medium transition-all bg-neutral-900 text-yellow-400 shadow-sm flex items-center gap-2"
-                    : "tab-btn px-6 py-2 rounded-full text-sm font-medium transition-all text-slate-600 hover:bg-slate-100 flex items-center gap-2";
-            });
+        function showToast(m, t='success') {
+            const c = document.getElementById('toastContainer');
+            const e = document.createElement('div');
+            e.className = `p-4 rounded-2xl shadow-lg border bg-white flex items-center gap-3 fade-in pointer-events-auto`;
+            e.innerHTML = `<i data-lucide="${t==='success'?'check-circle':'alert-circle'}" class="w-5 h-5 ${t==='success'?'text-emerald-500':'text-rose-500'}"></i> <span class="text-sm font-bold text-slate-700">${m}</span>`;
+            c.appendChild(e); lucide.createIcons();
+            setTimeout(() => { e.classList.add('opacity-0', '-translate-y-4'); setTimeout(() => e.remove(), 300); }, 3000);
         }
 
-        function render() {
-            const mainContent = document.getElementById('mainContent');
-            if (!mainContent) return;
-
-            if (state.isLoading) {
-                mainContent.innerHTML = `<div class="text-center py-12"><div class="loader mx-auto mb-4"></div><p class="text-slate-400">Mencari makna...</p></div>`;
-                return;
-            }
-            let html = '';
-            const query = state.query.trim();
+        function switchView(v) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${v}`).classList.remove('hidden');
             
-            if (!query) {
-                html = `<div class="text-center py-12 text-slate-500"><p>Gunakan kotak pencarian untuk memulai eksplorasi.</p></div>`;
-            } else if (state.results.kauniyah.length === 0 && state.results.quran.length === 0) {
-                html = `<div class="text-center py-12 bg-white rounded-3xl border border-slate-100"><i data-lucide="info" class="w-12 h-12 mx-auto text-slate-200 mb-4"></i><p>Tidak ditemukan hasil.</p></div>`;
-            } else {
-                if ((state.activeTab === 'all' || state.activeTab === 'kauniyah') && state.results.kauniyah.length > 0) {
-                    html += `<div class="mb-8"><h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Kauniyah (${state.results.kauniyah.length})</h2><div class="grid gap-4 md:grid-cols-2">`;
-                    html += state.results.kauniyah.map(item => `
-                        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm relative group">
-                            <!-- Tombol Edit Tersembunyi -->
-                            <button onclick="openAdminModal('update', '${item.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-500 bg-slate-50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </button>
-                            
-                            <h3 class="text-xl font-bold text-slate-800 mb-3 border-b pb-2 pr-8">${item.word}</h3>
-                            <div class="space-y-2">
-                                ${item.maknaPositif ? `<div class="bg-emerald-50 p-3 rounded-2xl text-sm"><b class="text-emerald-700 block mb-1">Positif:</b> ${item.maknaPositif}</div>` : ''}
-                                ${item.maknaNegatif ? `<div class="bg-rose-50 p-3 rounded-2xl text-sm"><b class="text-rose-700 block mb-1">Negatif:</b> ${item.maknaNegatif}</div>` : ''}
-                                ${item.keterangan ? `<p class="text-xs text-slate-400 italic px-1 pt-1">${item.keterangan}</p>` : ''}
-                            </div>
-                        </div>`).join('');
-                    html += `</div></div>`;
-                }
-                
-                if ((state.activeTab === 'all' || state.activeTab === 'quran') && state.results.quran.length > 0) {
-                    html += `<div><h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i data-lucide="book" class="w-4 h-4"></i> Harfiyah (${state.results.quran.length})</h2><div class="space-y-4">`;
-                    html += state.results.quran.map(item => `
-                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                            <div class="flex justify-between items-center mb-4"><span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">${item.surah} : ${item.ayat}</span></div>
-                            <p class="text-2xl font-arabic text-right mb-4 leading-loose dir-rtl">${item.arabic}</p>
-                            <div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-600 leading-relaxed"><b class="text-slate-800 block mb-1">Terjemah:</b> ${item.translation}</div>
-                        </div>`).join('');
-                    html += `</div></div>`;
-                }
+            document.querySelectorAll('.nav-btn').forEach(b => { 
+                b.classList.replace('text-yellow-400', 'text-slate-400'); 
+                const icon = b.querySelector('svg, i');
+                if (icon) icon.classList.remove('scale-110');
+            });
+            const activeBtn = document.getElementById(`nav-${v}`);
+            activeBtn.classList.replace('text-slate-400', 'text-yellow-400'); 
+            const activeIcon = activeBtn.querySelector('svg, i');
+            if (activeIcon) activeIcon.classList.add('scale-110');
+            
+            const title = document.getElementById('headerTitle'); const sub = document.getElementById('headerSubtitle');
+            if(v==='home') { title.innerHTML=`<i data-lucide="book-open" class="w-8 h-8"></i> MaknaQu`; sub.innerText="Eksplorasi Kauniyah & Pencari Ayat Harfiyah"; renderHomeSearch(); }
+            else if(v==='dalil') { title.innerHTML=`<i data-lucide="library" class="w-8 h-8"></i> Pustaka Dalil`; sub.innerText="Kumpulan Referensi Hadis & Artikel Keilmuan"; renderDalilList(); }
+            else if(v==='kaifiyah') { title.innerHTML=`<i data-lucide="heart-handshake" class="w-8 h-8"></i> Amalan`; sub.innerText="Panduan Dzikir, Doa & Tata Cara Ibadah"; renderKaifiyahList(); }
+            lucide.createIcons(); window.scrollTo(0,0);
+        }
+
+        function renderHomeSearch() {
+            const c = document.getElementById('mainContent');
+            const q = String(state.query || '').trim().toLowerCase();
+            if (!q && state.homeTab === 'all') {
+                c.innerHTML = `<div class="text-center py-12 text-slate-500 fade-in"><i data-lucide="search" class="w-12 h-12 mx-auto text-slate-200 mb-4 opacity-50"></i><p>Ketikkan kata untuk memulai eksplorasi makna.</p></div>`;
+                lucide.createIcons(); return;
             }
-            mainContent.innerHTML = html;
+
+            let dataKauniyah = state.db.filter(i => {
+                const cat = String(i.category || '').trim().toUpperCase();
+                return cat === 'KAUNIYAH' || cat === '';
+            });
+            let dataHadis = state.db.filter(i => String(i.category || '').trim().toUpperCase() === 'HADIS');
+
+            if (q) {
+                dataKauniyah = dataKauniyah.filter(i => String(i.word || '').toLowerCase().includes(q) || String(i.maknaPositif || '').toLowerCase().includes(q));
+                dataHadis = dataHadis.filter(i => String(i.word || '').toLowerCase().includes(q) || String(i.maknaPositif || '').toLowerCase().includes(q) || String(i.maknaNegatif || '').toLowerCase().includes(q));
+            }
+
+            let html = '';
+
+            if ((state.homeTab === 'all' || state.homeTab === 'kauniyah') && dataKauniyah.length > 0) {
+                html += `<div class="mb-6 fade-in"><h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Makna Kauniyah</h2><div class="grid gap-4 md:grid-cols-2">`;
+                html += dataKauniyah.map(i => {
+                    const word = String(i.word || ''); const positif = String(i.maknaPositif || ''); const negatif = String(i.maknaNegatif || '');
+                    return `<div class="bg-white rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden flex flex-col group">
+                        ${i.image ? `<img src="${i.image}" alt="cover" class="w-full h-32 object-cover bg-slate-100" onerror="this.style.display='none'">` : ''}
+                        <div class="p-5 flex-1">
+                            <button onclick="openAdminModal('update', '${i.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-600 bg-white shadow-md p-2 rounded-full transition-colors z-10" title="Edit Data"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <h3 class="text-xl font-bold text-slate-800 mb-3 border-b pb-2 pr-10">${word}</h3>
+                            <div class="space-y-2">
+                                ${positif ? `<div class="bg-emerald-50 p-3 rounded-2xl text-sm"><b class="text-emerald-700 block mb-1">Positif:</b> ${positif}</div>` : ''}
+                                ${negatif ? `<div class="bg-rose-50 p-3 rounded-2xl text-sm"><b class="text-rose-700 block mb-1">Negatif:</b> ${negatif}</div>` : ''}
+                                ${i.keterangan ? `<p class="text-xs text-slate-400 italic mt-2">${i.keterangan}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join(''); html += `</div></div>`;
+            }
+
+            if ((state.homeTab === 'all' || state.homeTab === 'hadis') && dataHadis.length > 0) {
+                html += `<div class="mb-6 fade-in"><h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> Dalil Hadis</h2><div class="space-y-3">`;
+                html += dataHadis.map(i => {
+                    const word = String(i.word || ''); const positif = String(i.maknaPositif || ''); const negatif = String(i.maknaNegatif || '');
+                    return `<div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-blue-400 relative">
+                        <button onclick="openAdminModal('update', '${i.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-600 bg-white shadow-sm p-2 rounded-full transition-colors z-10" title="Edit Data"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded mb-2 inline-block">Topik: ${word}</span>
+                        <p class="text-slate-700 font-medium leading-relaxed italic pr-10">"${positif}"</p>
+                        <p class="text-sm text-slate-400 mt-2 font-bold">— ${negatif}</p>
+                    </div>`;
+                }).join(''); html += `</div></div>`;
+            }
+
+            if ((state.homeTab === 'all' || state.homeTab === 'quran') && state.quran.length > 0) {
+                html += `<div class="mb-6 fade-in"><h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="book" class="w-4 h-4"></i> Harfiyah (Al-Quran)</h2><div class="space-y-4">`;
+                html += state.quran.map(i => `
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative">
+                        <div class="flex justify-between items-center mb-4"><span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">${i.surah} : ${i.ayat}</span></div>
+                        <p class="text-2xl font-arabic text-right mb-4 leading-loose dir-rtl">${i.arabic}</p>
+                        <div class="bg-slate-50 p-4 rounded-2xl text-sm text-slate-600 leading-relaxed"><b class="text-slate-800 block mb-1">Terjemah:</b> ${i.translation}</div>
+                    </div>`).join('');
+                html += `</div></div>`;
+            }
+
+            if (html === '') html = `<div class="text-center py-12 bg-white rounded-3xl border border-slate-100 fade-in"><i data-lucide="inbox" class="w-12 h-12 mx-auto text-slate-200 mb-4"></i><p class="text-slate-500">Tidak ada hasil yang cocok.</p></div>`;
+            c.innerHTML = html; lucide.createIcons();
+        }
+
+        function renderDalilList() {
+            const d = state.db.filter(i => {
+                const cat = String(i.category || '').trim().toUpperCase();
+                return cat === 'PANDUAN_DALIL' || cat === 'HADIS';
+            });
+            document.getElementById('dalilList').innerHTML = d.map(i => {
+                const isHadis = String(i.category || '').trim().toUpperCase() === 'HADIS';
+                const icon = isHadis ? 'message-circle' : 'book';
+                const label = isHadis ? 'Dalil Hadis' : 'Panduan Keilmuan';
+                const word = String(i.word || '');
+                const media = i.image ? `<img src="${i.image}" class="w-16 h-16 rounded-xl object-cover shrink-0 border border-slate-100 bg-slate-50" onerror="this.style.display='none'">` : `<div class="bg-blue-50 p-3 rounded-xl text-blue-500 shrink-0"><i data-lucide="${icon}" class="w-6 h-6"></i></div>`;
+                return `<div onclick="openReader('${i.id}', '${label}')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4">
+                    ${media} <div class="flex-1"><h3 class="font-bold text-slate-800 mb-1 leading-tight">${word}</h3><p class="text-xs text-slate-400 line-clamp-2">${String(i.maknaPositif || '').replace(/<[^>]*>?/gm, '')}</p></div>
+                </div>`;
+            }).join('') || '<p class="text-slate-400 text-sm">Belum ada panduan/dalil tersedia.</p>';
             lucide.createIcons();
         }
 
-        // ==========================================
-        // 3. FUNGSI MODAL ADMIN (GLOBAL)
-        // ==========================================
+        function renderKaifiyahList() {
+            const k = state.db.filter(i => String(i.category || '').trim().toUpperCase() === 'KAIFIYAH');
+            document.getElementById('kaifiyahList').innerHTML = k.map(i => {
+                const word = String(i.word || '');
+                const media = i.image ? `<img src="${i.image}" class="w-14 h-14 rounded-full object-cover shrink-0 border-2 border-emerald-100" onerror="this.style.display='none'">` : `<div class="bg-emerald-50 p-3 rounded-full text-emerald-500 shrink-0"><i data-lucide="sparkles" class="w-5 h-5"></i></div>`;
+                return `<div onclick="openReader('${i.id}', 'Panduan Amalan')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1">${media} <h3 class="font-bold text-slate-800 leading-tight">${word}</h3></div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300"></i>
+                </div>`;
+            }).join('') || '<p class="text-slate-400 text-sm">Belum ada amalan tersedia.</p>';
+            lucide.createIcons();
+        }
+
+        function openReader(id, cat) {
+            const i = state.db.find(x => x.id === id);
+            if (!i) return;
+            document.getElementById('readerCategory').innerText = cat;
+            document.getElementById('readerTitle').innerText = String(i.word || '');
+            document.getElementById('readerContent').innerHTML = String(i.maknaPositif || '');
+            const img = document.getElementById('readerImage');
+            if(i.image) { img.src = i.image; img.classList.remove('hidden'); } else img.classList.add('hidden');
+            
+            document.getElementById('readerEditBtn').onclick = () => { closeReader(); openAdminModal('update', id); };
+            const m = document.getElementById('readerModal'); m.classList.replace('hidden', 'flex');
+            m.children[1].classList.add('translate-y-full');
+            setTimeout(() => { m.children[1].style.transition='transform 0.3s ease-out'; m.children[1].classList.replace('translate-y-full','translate-y-0'); }, 10);
+            lucide.createIcons();
+        }
+        function closeReader() { document.getElementById('readerModal').classList.replace('flex', 'hidden'); }
+
+        function adjustAdminForm() { 
+            const c = document.getElementById('itemCategory').value;
+            document.getElementById('containerNegatif').style.display = (c==='PANDUAN_DALIL' || c==='KAIFIYAH') ? 'none' : 'block';
+        }
+
         function openAdminModal(action, id = null) {
             const modal = document.getElementById('adminModal');
             document.getElementById('formAction').value = action;
             document.getElementById('editId').value = id || '';
             
-            if(action === 'update' && id) {
-                const item = state.fullKauniyahDatabase.find(x => x.id === id);
-                if(item) {
-                    document.getElementById('modalTitle').innerHTML = `<i data-lucide="edit" class="text-yellow-500"></i> Edit Data`;
-                    document.getElementById('newWord').value = item.word;
-                    document.getElementById('newPositif').value = item.maknaPositif;
-                    document.getElementById('newNegatif').value = item.maknaNegatif;
-                    document.getElementById('newKet').value = item.keterangan;
-                }
-            } else {
-                document.getElementById('modalTitle').innerHTML = `<i data-lucide="plus-circle" class="text-yellow-500"></i> Tambah Data`;
+            if(action === 'add') {
                 document.getElementById('cmsForm').reset();
-                document.getElementById('formAction').value = 'add';
+                document.getElementById('itemCategory').disabled = false;
+                adjustAdminForm();
+            } else if(id) {
+                const item = state.db.find(x => x.id === id);
+                if(item) {
+                    document.getElementById('itemCategory').value = String(item.category || '').toUpperCase();
+                    document.getElementById('itemCategory').disabled = true;
+                    adjustAdminForm();
+                    document.getElementById('newWord').value = String(item.word || '');
+                    document.getElementById('newPositif').value = String(item.maknaPositif || '');
+                    document.getElementById('newNegatif').value = String(item.maknaNegatif || '');
+                    document.getElementById('newKet').value = String(item.keterangan || '');
+                    document.getElementById('newImage').value = item.image || ''; 
+                }
             }
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-            document.getElementById('adminPass').focus();
+            modal.classList.replace('hidden', 'flex'); lucide.createIcons();
         }
+        function closeAdminModal() { document.getElementById('adminModal').classList.replace('flex', 'hidden'); }
 
-        function closeAdminModal() {
-            const modal = document.getElementById('adminModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.getElementById('cmsForm').reset();
-        }
-
-        // ==========================================
-        // 4. PENGIKATAN EVENT (Setelah HTML Selesai Dimuat)
-        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Render icon gembok & tombol di awal
             lucide.createIcons();
 
-            // Event Listener Pencarian
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    state.query = e.target.value;
-                    if (searchTimeout) clearTimeout(searchTimeout);
-                    if(state.query.trim()) setLoading(true);
-                    searchTimeout = setTimeout(() => { executeSearch(); }, 800); 
-                });
-            }
+            document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('userLoginBtn');
+                btn.disabled = true; btn.innerHTML = `<div class="loader" style="width:20px;height:20px;border-width:2px;border-top-color:white;"></div>`;
+                
+                try {
+                    const res = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+                        body: JSON.stringify({ action: 'login', password: document.getElementById('userPass').value })
+                    });
+                    
+                    const textData = await res.text();
+                    
+                    let result;
+                    try {
+                        result = safeParseJSON(textData);
+                    } catch (parseErr) {
+                        console.error("Kesalahan parsing login:", textData);
+                        showToast("Sistem belum di-update. Mohon Lakukan Deploy -> Versi Baru.", "error");
+                        return;
+                    }
 
-            // Event Listener Tombol Tab (Kauniyah/Harfiyah)
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            tabButtons.forEach(btn => {
+                    if(result.status === 'success') {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('appContainer').classList.remove('hidden');
+                        showToast('Selamat datang di MaknaQu', 'success');
+                        await initDatabase();
+                        renderHomeSearch();
+                    } else {
+                        showToast(result.message, 'error');
+                    }
+                } catch (err) { 
+                    showToast('Kesalahan jaringan. Pastikan Deploy sebagai "Me" dan Akses "Anyone".', 'error'); 
+                }
+                finally { btn.disabled = false; btn.innerHTML = `<i data-lucide="unlock" class="w-5 h-5"></i> Masuk`; lucide.createIcons(); }
+            });
+
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            searchInput.addEventListener('input', (e) => {
+                state.query = e.target.value;
+                clearBtn.style.display = state.query ? 'block' : 'none';
+                if (searchTimeout) clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => { executeSearch(); }, 800); 
+                renderHomeSearch(); 
+            });
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = ''; state.query = ''; clearBtn.style.display = 'none';
+                searchInput.focus(); executeSearch();
+            });
+
+            document.querySelectorAll('.home-tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    state.activeTab = e.currentTarget.getAttribute('data-tab');
-                    updateTabUI(); render();
+                    document.querySelectorAll('.home-tab-btn').forEach(b => b.className = "home-tab-btn shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all text-slate-500 hover:bg-slate-100 flex items-center gap-2");
+                    const t = e.currentTarget; t.className = "home-tab-btn shrink-0 active px-5 py-2 rounded-full text-xs font-bold transition-all bg-neutral-900 text-yellow-400 shadow-sm flex items-center gap-2";
+                    state.homeTab = t.getAttribute('data-tab'); renderHomeSearch();
                 });
             });
 
-            // Event Listener Login Pengunjung
-            const userLoginForm = document.getElementById('userLoginForm');
-            if (userLoginForm) {
-                userLoginForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_DI_SINI') {
-                        alert("PENTING: Anda belum memasukkan URL Google Apps Script di dalam kode HTML.");
-                        return;
-                    }
+            document.getElementById('cmsForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true; btn.innerHTML = `<div class="loader" style="width:16px;height:16px;"></div> Menyimpan...`;
 
-                    const password = document.getElementById('userPass').value;
-                    const btn = document.getElementById('userLoginBtn');
-                    
-                    btn.disabled = true;
-                    btn.innerHTML = `<div class="loader" style="border-top-color: white; width:20px; height:20px;"></div>`;
+                const payload = {
+                    password: document.getElementById('adminPass').value,
+                    action: document.getElementById('formAction').value,
+                    id: document.getElementById('editId').value,
+                    category: document.getElementById('itemCategory').value,
+                    word: document.getElementById('newWord').value,
+                    positif: document.getElementById('newPositif').value,
+                    negatif: document.getElementById('newNegatif').value,
+                    keterangan: document.getElementById('newKet').value,
+                    image: document.getElementById('newImage').value 
+                };
 
+                try {
+                    const res = await fetch(APPS_SCRIPT_URL, {
+                        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload)
+                    });
+                    const textData = await res.text();
+                    
+                    let result;
                     try {
-                        const response = await fetch(APPS_SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            redirect: 'follow',
-                            body: JSON.stringify({ action: 'login', password: password })
-                        });
-
-                        const result = await response.json();
-
-                        if(result.status === 'success') {
-                            // Sembunyikan form login, tampilkan aplikasi utama
-                            document.getElementById('loginOverlay').classList.add('hidden');
-                            document.getElementById('loginOverlay').classList.remove('flex');
-                            document.getElementById('appContainer').classList.remove('hidden');
-                            
-                            // Load data setelah berhasil login
-                            initKauniyahDatabase().then(() => {
-                                lucide.createIcons();
-                                render();
-                            });
-                        } else {
-                            alert(result.message);
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        alert("Terjadi kesalahan jaringan. Cek kembali URL Apps Script Anda.");
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = `<i data-lucide="unlock" class="w-5 h-5"></i> Masuk`;
-                        lucide.createIcons();
-                    }
-                });
-            }
-
-            // Event Listener Form CMS Admin
-            const cmsForm = document.getElementById('cmsForm');
-            if (cmsForm) {
-                cmsForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'MASUKKAN_URL_WEB_APP_APPS_SCRIPT_DI_SINI') {
-                        alert("PENTING: Anda belum memasukkan URL Google Apps Script.");
-                        return;
+                        result = safeParseJSON(textData);
+                    } catch (parseErr) {
+                         console.error("Kesalahan parsing simpan data:", textData);
+                         showToast("Penyimpanan gagal. Sistem belum di-update.", "error");
+                         return;
                     }
 
-                    const btn = document.getElementById('submitBtn');
-                    const payload = {
-                        password: document.getElementById('adminPass').value,
-                        action: document.getElementById('formAction').value,
-                        id: document.getElementById('editId').value,
-                        word: document.getElementById('newWord').value,
-                        positif: document.getElementById('newPositif').value,
-                        negatif: document.getElementById('newNegatif').value,
-                        keterangan: document.getElementById('newKet').value
-                    };
-
-                    btn.disabled = true;
-                    btn.innerHTML = `<div class="loader"></div> Menyimpan...`;
-
-                    try {
-                        const response = await fetch(APPS_SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            redirect: 'follow', 
-                            body: JSON.stringify(payload)
-                        });
-
-                        const result = await response.json();
-
-                        if(result.status === 'success') {
-                            alert(result.message);
-                            closeAdminModal();
-                            await initKauniyahDatabase(); 
-                            executeSearch(); 
-                        } else {
-                            alert("Gagal: " + result.message); 
-                        }
-                        
-                    } catch (error) {
-                        console.error(error);
-                        alert("Terjadi kesalahan. Pastikan URL Apps Script benar dan di-deploy 'Siapa Saja'.");
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> Simpan Data`;
-                        lucide.createIcons();
-                    }
-                });
-            }
+                    if(result.status === 'success') {
+                        showToast(result.message, 'success');
+                        closeAdminModal();
+                        await initDatabase(); executeSearch(); 
+                        if(state.homeTab === 'dalil') renderDalilList();
+                        if(state.homeTab === 'kaifiyah') renderKaifiyahList();
+                    } else showToast(result.message, 'error');
+                } catch (err) { showToast('Gagal menyimpan. Cek koneksi internet Anda.', 'error'); }
+                finally { btn.disabled = false; btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Simpan Data`; lucide.createIcons(); }
+            });
         });
     </script>
 </body>
