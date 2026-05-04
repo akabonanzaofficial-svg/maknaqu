@@ -12,6 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
     
     <style>
+        /* KUNCI UTAMA ANTI-REFRESH: Mematikan fungsi "Tarik ke Bawah untuk Refresh" di Browser HP */
+        html, body { 
+            overscroll-behavior-y: none; 
+        }
+        
         .font-arabic { font-family: 'Amiri', serif; }
         .dir-rtl { direction: rtl; text-align: right; }
         
@@ -25,10 +30,17 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         #adminModal.flex, #readerModal.flex { backdrop-blur: 4px; }
-        ::-webkit-scrollbar { width: 6px; }
+        
+        /* Modifikasi Scrollbar agar lebih elegan */
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
+        /* SMOOTH SCROLL KHUSUS MOBILE / iOS */
+        .smooth-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+
         /* CSS Untuk Konten Artikel & Editor */
         .prose-custom p { margin-bottom: 1rem; line-height: 1.7; color: #334155; }
         .prose-custom ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: decimal; }
@@ -127,17 +139,14 @@
     </div>
 
     <!-- SMART EDGE PANEL MINI -->
-    <!-- Garis Pemicu (Trigger) -->
     <div id="smartPanelTrigger" onclick="toggleSmartPanel()" class="fixed right-0 top-1/2 -translate-y-1/2 bg-neutral-400/40 w-1.5 h-16 rounded-l-full cursor-pointer z-40 transition-all duration-300 hover:bg-yellow-400 hover:w-2 hover:shadow-[-2px_0_10px_rgba(250,204,21,0.5)] group flex items-center">
         <div class="absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <i data-lucide="chevron-left" class="w-5 h-5 text-yellow-500 drop-shadow-md"></i>
         </div>
     </div>
 
-    <!-- Lapisan transparan (hanya untuk mendeteksi klik di luar menu) -->
     <div id="smartPanelOverlay" onclick="toggleSmartPanel()" class="fixed inset-0 z-40 hidden"></div>
 
-    <!-- Mini Pop-up Panel -->
     <div id="smartPanel" class="fixed right-3 top-1/2 -translate-y-1/2 bg-neutral-900/60 backdrop-blur-md p-2.5 rounded-2xl shadow-lg z-50 transform translate-x-16 opacity-0 pointer-events-none transition-all duration-300 ease-out border border-white/10 flex flex-col items-center">
         <button onclick="toggleSmartPanel(); openAdminModal('add');" class="w-10 h-10 bg-white/20 text-yellow-400 rounded-xl flex items-center justify-center hover:bg-yellow-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all shadow-sm" title="Tambah Data">
             <i data-lucide="plus" class="w-5 h-5"></i>
@@ -173,8 +182,8 @@
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
             </button>
         </div>
-        <!-- PENAMBAHAN overscroll-y-contain DI SINI UNTUK MENCEGAH SCROLL BLEEDING -->
-        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative overscroll-y-contain">
+        <!-- Tambahan kelas smooth-scroll untuk melicinkan pergerakan jari -->
+        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative overscroll-y-contain smooth-scroll">
             <img id="readerImage" src="" alt="Hero" class="w-full h-48 md:h-64 object-cover hidden">
             <div class="p-6 md:p-8">
                 <h1 id="readerTitle" class="text-2xl md:text-3xl font-bold text-slate-800 mb-6 leading-tight pb-4 border-b border-slate-100">Judul</h1>
@@ -185,8 +194,8 @@
 
     <!-- ADMIN MODAL -->
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
-        <!-- PENAMBAHAN overscroll-y-contain JUGA PADA FORM MODAL -->
-        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto overscroll-y-contain">
+        <!-- Tambahan kelas smooth-scroll -->
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto overscroll-y-contain smooth-scroll">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-yellow-500"></i> Kelola Data</h2>
                 <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -219,7 +228,7 @@
                             <button type="button" onclick="formatText('insertOrderedList')" class="p-1.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors" title="Daftar Angka (Number)"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
                         </div>
                         <!-- Editor Input (Menggantikan Textarea) -->
-                        <div id="richTextEditor" contenteditable="true" class="w-full p-3 outline-none min-h-[100px] max-h-48 overflow-y-auto text-sm leading-relaxed prose-custom empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 overscroll-y-contain" data-placeholder="Isi konten / artikel di sini..."></div>
+                        <div id="richTextEditor" contenteditable="true" class="w-full p-3 outline-none min-h-[100px] max-h-48 overflow-y-auto text-sm leading-relaxed prose-custom empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 overscroll-y-contain smooth-scroll" data-placeholder="Isi konten / artikel di sini..."></div>
                     </div>
                 </div>
 
@@ -475,7 +484,6 @@
             lucide.createIcons();
         }
 
-        // PENAMBAHAN BODY SCROLL LOCK SAAT MEMBUKA MODAL
         function openReader(id, cat) {
             const i = state.db.find(x => x.id === id);
             if (!i) return;
@@ -488,7 +496,7 @@
             document.getElementById('readerEditBtn').onclick = () => { closeReader(); openAdminModal('update', id); };
             const m = document.getElementById('readerModal'); m.classList.replace('hidden', 'flex');
             
-            // Mengunci scroll di layar latar belakang
+            // Mengunci scroll di layar utama saat modal terbuka
             document.body.style.overflow = 'hidden';
 
             m.children[1].classList.add('translate-y-full');
@@ -498,7 +506,7 @@
 
         function closeReader() { 
             document.getElementById('readerModal').classList.replace('flex', 'hidden'); 
-            // Mengembalikan fungsi scroll latar belakang
+            // Membuka kembali scroll layar utama
             document.body.style.overflow = '';
         }
 
