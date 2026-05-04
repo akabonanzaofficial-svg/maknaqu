@@ -173,7 +173,8 @@
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
             </button>
         </div>
-        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative">
+        <!-- PENAMBAHAN overscroll-y-contain DI SINI UNTUK MENCEGAH SCROLL BLEEDING -->
+        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative overscroll-y-contain">
             <img id="readerImage" src="" alt="Hero" class="w-full h-48 md:h-64 object-cover hidden">
             <div class="p-6 md:p-8">
                 <h1 id="readerTitle" class="text-2xl md:text-3xl font-bold text-slate-800 mb-6 leading-tight pb-4 border-b border-slate-100">Judul</h1>
@@ -184,7 +185,8 @@
 
     <!-- ADMIN MODAL -->
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto">
+        <!-- PENAMBAHAN overscroll-y-contain JUGA PADA FORM MODAL -->
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto overscroll-y-contain">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-yellow-500"></i> Kelola Data</h2>
                 <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -217,7 +219,7 @@
                             <button type="button" onclick="formatText('insertOrderedList')" class="p-1.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors" title="Daftar Angka (Number)"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
                         </div>
                         <!-- Editor Input (Menggantikan Textarea) -->
-                        <div id="richTextEditor" contenteditable="true" class="w-full p-3 outline-none min-h-[100px] max-h-48 overflow-y-auto text-sm leading-relaxed prose-custom empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400" data-placeholder="Isi konten / artikel di sini..."></div>
+                        <div id="richTextEditor" contenteditable="true" class="w-full p-3 outline-none min-h-[100px] max-h-48 overflow-y-auto text-sm leading-relaxed prose-custom empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 overscroll-y-contain" data-placeholder="Isi konten / artikel di sini..."></div>
                     </div>
                 </div>
 
@@ -473,6 +475,7 @@
             lucide.createIcons();
         }
 
+        // PENAMBAHAN BODY SCROLL LOCK SAAT MEMBUKA MODAL
         function openReader(id, cat) {
             const i = state.db.find(x => x.id === id);
             if (!i) return;
@@ -484,11 +487,20 @@
             
             document.getElementById('readerEditBtn').onclick = () => { closeReader(); openAdminModal('update', id); };
             const m = document.getElementById('readerModal'); m.classList.replace('hidden', 'flex');
+            
+            // Mengunci scroll di layar latar belakang
+            document.body.style.overflow = 'hidden';
+
             m.children[1].classList.add('translate-y-full');
             setTimeout(() => { m.children[1].style.transition='transform 0.3s ease-out'; m.children[1].classList.replace('translate-y-full','translate-y-0'); }, 10);
             lucide.createIcons();
         }
-        function closeReader() { document.getElementById('readerModal').classList.replace('flex', 'hidden'); }
+
+        function closeReader() { 
+            document.getElementById('readerModal').classList.replace('flex', 'hidden'); 
+            // Mengembalikan fungsi scroll latar belakang
+            document.body.style.overflow = '';
+        }
 
         function adjustAdminForm() { 
             const c = document.getElementById('itemCategory').value;
@@ -523,9 +535,17 @@
                     document.getElementById('newImage').value = item.image || ''; 
                 }
             }
-            modal.classList.replace('hidden', 'flex'); lucide.createIcons();
+            modal.classList.replace('hidden', 'flex'); 
+            // Mengunci scroll layar latar belakang
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
         }
-        function closeAdminModal() { document.getElementById('adminModal').classList.replace('flex', 'hidden'); }
+
+        function closeAdminModal() { 
+            document.getElementById('adminModal').classList.replace('flex', 'hidden'); 
+            // Mengembalikan fungsi scroll latar belakang
+            document.body.style.overflow = '';
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
