@@ -29,8 +29,10 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
+        /* CSS Untuk Konten Artikel & Editor */
         .prose-custom p { margin-bottom: 1rem; line-height: 1.7; color: #334155; }
         .prose-custom ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: decimal; }
+        .prose-custom ul { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc; }
         .prose-custom li { margin-bottom: 0.5rem; }
         
         body { padding-bottom: 90px; }
@@ -44,9 +46,9 @@
     <div id="loginOverlay" class="fixed inset-0 bg-slate-50 flex items-center justify-center p-4" style="z-index: 9999;">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center fade-in">
             
-            <!-- LOGO DAN LABEL VERSI (Diperbaiki agar tidak hilang) -->
+            <!-- LOGO DAN LABEL VERSI -->
             <div class="mb-6 flex flex-col items-center justify-center">
-                <img src="logo-maknaqu.png" alt="Logo MaknaQu" class="w-24 h-24 mb-3 object-contain drop-shadow-md rounded-2xl">
+                <img src="logo-maknaqu.png" alt="Logo MaknaQu" class="w-24 h-24 mb-3 object-contain drop-shadow-md rounded-2xl" onerror="this.style.display='none'">
                 <span class="bg-slate-50 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full tracking-widest border border-slate-200 shadow-sm">
                     VERSI 02
                 </span>
@@ -135,7 +137,7 @@
     <!-- Lapisan transparan (hanya untuk mendeteksi klik di luar menu) -->
     <div id="smartPanelOverlay" onclick="toggleSmartPanel()" class="fixed inset-0 z-40 hidden"></div>
 
-    <!-- Mini Pop-up Panel (Minimalis & Semi Transparan) -->
+    <!-- Mini Pop-up Panel -->
     <div id="smartPanel" class="fixed right-3 top-1/2 -translate-y-1/2 bg-neutral-900/60 backdrop-blur-md p-2.5 rounded-2xl shadow-lg z-50 transform translate-x-16 opacity-0 pointer-events-none transition-all duration-300 ease-out border border-white/10 flex flex-col items-center">
         <button onclick="toggleSmartPanel(); openAdminModal('add');" class="w-10 h-10 bg-white/20 text-yellow-400 rounded-xl flex items-center justify-center hover:bg-yellow-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all shadow-sm" title="Tambah Data">
             <i data-lucide="plus" class="w-5 h-5"></i>
@@ -187,22 +189,42 @@
                 <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-yellow-500"></i> Kelola Data</h2>
                 <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
+            
             <form id="cmsForm" class="space-y-4">
                 <input type="hidden" id="editId" value="">
                 <input type="hidden" id="formAction" value="add">
 
                 <input type="password" id="adminPass" placeholder="Password Admin" class="w-full p-3 rounded-xl border border-slate-200 outline-none bg-rose-50 text-sm" required>
+                
                 <select id="itemCategory" onchange="adjustAdminForm()" class="w-full p-3 rounded-xl border border-slate-200 outline-none bg-slate-50 text-sm font-semibold">
                     <option value="KAUNIYAH">Makna Kauniyah</option>
                     <option value="HADIS">Dalil Hadis</option>
                     <option value="PANDUAN_DALIL">Artikel Dalil</option>
                     <option value="KAIFIYAH">Artikel Kaifiyah</option>
                 </select>
+                
                 <input type="text" id="newWord" placeholder="Judul / Kata" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm" required>
-                <textarea id="newPositif" placeholder="Isi / Makna Positif" class="w-full p-3 rounded-xl border border-slate-200 outline-none h-24 text-sm" required></textarea>
+                
+                <!-- RICH TEXT EDITOR (WYSIWYG) CUSTOM -->
+                <div class="space-y-1">
+                    <label id="labelPositif" class="text-xs font-semibold text-slate-500 ml-1 hidden">Makna / Isi Artikel</label>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden focus-within:border-yellow-400 transition-colors bg-white">
+                        <!-- Toolbar -->
+                        <div class="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center gap-1">
+                            <button type="button" onclick="formatText('bold')" class="p-1.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors" title="Tebal (Bold)"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                            <div class="w-px h-4 bg-slate-300 mx-1"></div>
+                            <button type="button" onclick="formatText('insertUnorderedList')" class="p-1.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors" title="Daftar Titik (Bullet)"><i data-lucide="list" class="w-4 h-4"></i></button>
+                            <button type="button" onclick="formatText('insertOrderedList')" class="p-1.5 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded transition-colors" title="Daftar Angka (Number)"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+                        </div>
+                        <!-- Editor Input (Menggantikan Textarea) -->
+                        <div id="richTextEditor" contenteditable="true" class="w-full p-3 outline-none min-h-[100px] max-h-48 overflow-y-auto text-sm leading-relaxed prose-custom empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400" data-placeholder="Isi konten / artikel di sini..."></div>
+                    </div>
+                </div>
+
                 <div id="containerNegatif"><textarea id="newNegatif" placeholder="Makna Negatif / Perawi" class="w-full p-3 rounded-xl border border-slate-200 outline-none h-20 text-sm"></textarea></div>
                 <input type="text" id="newKet" placeholder="Keterangan Tambahan (Opsional)" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm">
                 <input type="url" id="newImage" placeholder="URL Gambar / Link Foto (Opsional)" class="w-full p-3 rounded-xl border border-slate-200 outline-none text-sm bg-slate-50">
+                
                 <button type="submit" id="submitBtn" class="w-full bg-neutral-900 text-yellow-400 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2">
                     <i data-lucide="save" class="w-4 h-4"></i> Simpan Data
                 </button>
@@ -215,6 +237,12 @@
 
         let state = { query: '', homeTab: 'all', isLoading: false, db: [], quran: [] };
         let searchTimeout = null;
+
+        // --- FUNGSI FORMAT EDITOR WYSIWYG ---
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('richTextEditor').focus();
+        }
 
         // --- FUNGSI SMART PANEL MINI ---
         function toggleSmartPanel() {
@@ -238,7 +266,6 @@
             lucide.createIcons();
         }
 
-        // FUNGSI ANTI-ERROR: Membersihkan teks kotor dari Google sebelum di-parse
         function safeParseJSON(str) {
             try {
                 let cleanStr = str.replace(/^[\u0000-\u001F\uFEFF]+|[\u0000-\u001F\uFEFF]+$/g, '').trim();
@@ -378,8 +405,8 @@
                             <button onclick="openAdminModal('update', '${i.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-600 bg-white shadow-md p-2 rounded-full transition-colors z-10" title="Edit Data"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <h3 class="text-xl font-bold text-slate-800 mb-3 border-b pb-2 pr-10">${word}</h3>
                             <div class="space-y-2">
-                                ${positif ? `<div class="bg-emerald-50 p-3 rounded-2xl text-sm"><b class="text-emerald-700 block mb-1">Positif:</b> ${positif}</div>` : ''}
-                                ${negatif ? `<div class="bg-rose-50 p-3 rounded-2xl text-sm"><b class="text-rose-700 block mb-1">Negatif:</b> ${negatif}</div>` : ''}
+                                ${positif ? `<div class="bg-emerald-50 p-3 rounded-2xl text-sm prose-custom"><b class="text-emerald-700 block mb-1">Positif:</b> ${positif}</div>` : ''}
+                                ${negatif ? `<div class="bg-rose-50 p-3 rounded-2xl text-sm prose-custom"><b class="text-rose-700 block mb-1">Negatif:</b> ${negatif}</div>` : ''}
                                 ${i.keterangan ? `<p class="text-xs text-slate-400 italic mt-2">${i.keterangan}</p>` : ''}
                             </div>
                         </div>
@@ -394,7 +421,7 @@
                     return `<div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm border-l-4 border-l-blue-400 relative">
                         <button onclick="openAdminModal('update', '${i.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-yellow-600 bg-white shadow-sm p-2 rounded-full transition-colors z-10" title="Edit Data"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                         <span class="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded mb-2 inline-block">Topik: ${word}</span>
-                        <p class="text-slate-700 font-medium leading-relaxed italic pr-10">"${positif}"</p>
+                        <div class="text-slate-700 font-medium leading-relaxed italic pr-10 prose-custom">"${positif}"</div>
                         <p class="text-sm text-slate-400 mt-2 font-bold">— ${negatif}</p>
                     </div>`;
                 }).join(''); html += `</div></div>`;
@@ -465,6 +492,11 @@
 
         function adjustAdminForm() { 
             const c = document.getElementById('itemCategory').value;
+            const lbl = document.getElementById('labelPositif');
+            if(c === 'KAUNIYAH') lbl.innerText = 'Makna Positif';
+            else if(c === 'HADIS') lbl.innerText = 'Teks / Terjemahan Hadis';
+            else lbl.innerText = 'Isi Artikel Lengkap';
+            
             document.getElementById('containerNegatif').style.display = (c==='PANDUAN_DALIL' || c==='KAIFIYAH') ? 'none' : 'block';
         }
 
@@ -476,6 +508,7 @@
             if(action === 'add') {
                 document.getElementById('cmsForm').reset();
                 document.getElementById('itemCategory').disabled = false;
+                document.getElementById('richTextEditor').innerHTML = ''; // Kosongkan editor
                 adjustAdminForm();
             } else if(id) {
                 const item = state.db.find(x => x.id === id);
@@ -484,7 +517,7 @@
                     document.getElementById('itemCategory').disabled = true;
                     adjustAdminForm();
                     document.getElementById('newWord').value = String(item.word || '');
-                    document.getElementById('newPositif').value = String(item.maknaPositif || '');
+                    document.getElementById('richTextEditor').innerHTML = String(item.maknaPositif || ''); // Muat ke editor
                     document.getElementById('newNegatif').value = String(item.maknaNegatif || '');
                     document.getElementById('newKet').value = String(item.keterangan || '');
                     document.getElementById('newImage').value = item.image || ''; 
@@ -558,6 +591,14 @@
 
             document.getElementById('cmsForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                // Cek apakah Rich Text Editor kosong sebelum memproses
+                const editorContent = document.getElementById('richTextEditor').innerHTML.trim();
+                if (!editorContent || editorContent === '<br>') {
+                    showToast('Isi / Makna Positif tidak boleh kosong!', 'error');
+                    return;
+                }
+
                 const btn = document.getElementById('submitBtn');
                 btn.disabled = true; btn.innerHTML = `<div class="loader" style="width:16px;height:16px;"></div> Menyimpan...`;
 
@@ -567,7 +608,7 @@
                     id: document.getElementById('editId').value,
                     category: document.getElementById('itemCategory').value,
                     word: document.getElementById('newWord').value,
-                    positif: document.getElementById('newPositif').value,
+                    positif: editorContent, // Mengambil isi dari Custom Editor
                     negatif: document.getElementById('newNegatif').value,
                     keterangan: document.getElementById('newKet').value,
                     image: document.getElementById('newImage').value 
