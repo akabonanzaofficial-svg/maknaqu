@@ -11,29 +11,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
     
     <style>
-        /* KUNCI MATI BROWSER: Mencegah Pull-to-Refresh 100% */
+        /* KUNCI MATI BROWSER & WEBVIEW */
         html, body {
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             margin: 0;
             padding: 0;
-            overflow: hidden !important; /* Matikan guliran body */
-            position: fixed; /* Kunci viewport (khusus untuk iOS Safari) */
+            overflow: hidden !important; 
+            position: fixed; 
             overscroll-behavior: none;
-            background-color: #f8fafc; /* bg-slate-50 */
+            background-color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent; /* Hilangkan kedip biru di Android */
         }
         
-        /* WADAH GULIRAN KUSTOM: Pengganti guliran body */
+        /* WADAH GULIRAN KUSTOM */
         #main-scroll-wrapper {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
+            overflow-x: hidden;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* Licin di iOS */
-            overscroll-behavior-y: none; /* Tolak pantulan */
-            padding-bottom: 90px; /* Ruang untuk navbar bawah */
+            -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: none; 
+            padding-bottom: 90px; 
+            /* Perbaikan tambahan agar scroll lebih lancar di WebView Android */
+            will-change: scroll-position;
+            transform: translateZ(0); 
         }
 
         .font-arabic { font-family: 'Amiri', serif; }
@@ -53,7 +58,11 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        .smooth-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
+        .smooth-scroll { 
+            -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: none; 
+            will-change: scroll-position;
+        }
 
         .prose-custom p { margin-bottom: 1rem; line-height: 1.7; color: #334155; }
         .prose-custom ol { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: decimal; }
@@ -65,7 +74,7 @@
 
     <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
 
-    <!-- LOGIN PENGUNJUNG OVERLAY (Di luar area scroll) -->
+    <!-- LOGIN PENGUNJUNG OVERLAY -->
     <div id="loginOverlay" class="fixed inset-0 bg-slate-50 flex items-center justify-center p-4" style="z-index: 9999;">
         <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center fade-in">
             <div class="mb-6 flex flex-col items-center justify-center">
@@ -185,7 +194,7 @@
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
             </button>
         </div>
-        <div class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative smooth-scroll">
+        <div id="readerScrollArea" class="flex-1 overflow-y-auto p-0 bg-white max-w-3xl mx-auto w-full shadow-xl relative smooth-scroll">
             <img id="readerImage" src="" alt="Hero" class="w-full h-48 md:h-64 object-cover hidden">
             <div class="p-6 md:p-8">
                 <h1 id="readerTitle" class="text-2xl md:text-3xl font-bold text-slate-800 mb-6 leading-tight pb-4 border-b border-slate-100">Judul</h1>
@@ -196,7 +205,7 @@
 
     <!-- ADMIN MODAL -->
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto smooth-scroll flex flex-col">
+        <div id="adminScrollArea" class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl scale-95 transition-transform max-h-[90vh] overflow-y-auto smooth-scroll flex flex-col">
             <div class="flex justify-between items-center mb-6 shrink-0">
                 <h2 class="text-xl font-bold flex items-center gap-2 text-slate-800"><i data-lucide="database" class="text-yellow-500"></i> Kelola Data</h2>
                 <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -245,6 +254,36 @@
         let state = { query: '', homeTab: 'all', isLoading: false, db: [], quran: [] };
         let searchTimeout = null;
 
+        // VAKSIN WEBVIEW: MENCEGAH PULL-TO-REFRESH SECARA PAKSA VIA JAVASCRIPT
+        let touchStartY = 0;
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            const touchY = e.touches[0].clientY;
+            const touchDiff = touchY - touchStartY;
+            
+            // Elemen-elemen yang bisa discroll
+            const mainWrapper = document.getElementById('main-scroll-wrapper');
+            const readerArea = document.getElementById('readerScrollArea');
+            const adminArea = document.getElementById('adminScrollArea');
+            const editorArea = document.getElementById('richTextEditor');
+
+            // Deteksi di mana jari sedang berada
+            let activeScrollElement = mainWrapper;
+            if (!document.getElementById('readerModal').classList.contains('hidden')) activeScrollElement = readerArea;
+            if (!document.getElementById('adminModal').classList.contains('hidden')) {
+                if(e.target === editorArea || editorArea.contains(e.target)) activeScrollElement = editorArea;
+                else activeScrollElement = adminArea;
+            }
+
+            // Jika menarik ke bawah (touchDiff > 0) DAN posisi scroll sedang di paling atas (0)
+            if (touchDiff > 0 && activeScrollElement.scrollTop === 0) {
+                e.preventDefault(); // BUNUH PERINTAH REFRESH BROWSER
+            }
+        }, { passive: false });
+
         function formatText(command) {
             document.execCommand(command, false, null);
             document.getElementById('richTextEditor').focus();
@@ -254,6 +293,7 @@
             const panel = document.getElementById('smartPanel');
             const overlay = document.getElementById('smartPanelOverlay');
             const trigger = document.getElementById('smartPanelTrigger');
+            
             if (panel.classList.contains('opacity-0')) {
                 overlay.classList.remove('hidden');
                 trigger.classList.add('opacity-0', 'translate-x-4'); 
@@ -271,14 +311,8 @@
         }
 
         function safeParseJSON(str) {
-            try {
-                let cleanStr = str.replace(/^[\u0000-\u001F\uFEFF]+|[\u0000-\u001F\uFEFF]+$/g, '').trim();
-                return JSON.parse(cleanStr);
-            } catch (e) {
-                const match = str.match(/\{[\s\S]*\}/);
-                if (match) { try { return JSON.parse(match[0]); } catch(e2) {} }
-                throw new Error("Format data tidak valid.");
-            }
+            try { return JSON.parse(str.replace(/^[\u0000-\u001F\uFEFF]+|[\u0000-\u001F\uFEFF]+$/g, '').trim()); } 
+            catch (e) { const m = str.match(/\{[\s\S]*\}/); if (m) { try { return JSON.parse(m[0]); } catch(e2) {} } throw new Error("Format data tidak valid."); }
         }
 
         async function initDatabase() {
@@ -327,7 +361,7 @@
 
         function showToast(m, t='success') {
             const c = document.getElementById('toastContainer'); const e = document.createElement('div');
-            e.className = `p-4 rounded-2xl shadow-lg border bg-white flex items-center gap-3 fade-in pointer-events-auto`;
+            e.className = `p-4 rounded-2xl shadow-lg border bg-white flex items-center gap-3 fade-in pointer-events-auto z-[99999] relative`;
             e.innerHTML = `<i data-lucide="${t==='success'?'check-circle':'alert-circle'}" class="w-5 h-5 ${t==='success'?'text-emerald-500':'text-rose-500'}"></i> <span class="text-sm font-bold text-slate-700">${m}</span>`;
             c.appendChild(e); lucide.createIcons();
             setTimeout(() => { e.classList.add('opacity-0', '-translate-y-4'); setTimeout(() => e.remove(), 300); }, 3000);
@@ -344,7 +378,6 @@
             else if(v==='dalil') { title.innerHTML=`<i data-lucide="library" class="w-8 h-8"></i> Pustaka Dalil`; sub.innerText="Kumpulan Referensi Hadis & Artikel Keilmuan"; renderDalilList(); }
             else if(v==='kaifiyah') { title.innerHTML=`<i data-lucide="heart-handshake" class="w-8 h-8"></i> Amalan`; sub.innerText="Panduan Dzikir, Doa & Tata Cara Ibadah"; renderKaifiyahList(); }
             lucide.createIcons(); 
-            // PERUBAHAN JS: Scroll ditarik dari div custom, bukan dari window
             document.getElementById('main-scroll-wrapper').scrollTo(0,0);
         }
 
@@ -402,20 +435,12 @@
             if(i.image){img.src=i.image;img.classList.remove('hidden');}else img.classList.add('hidden');
             document.getElementById('readerEditBtn').onclick = () => { closeReader(); openAdminModal('update', id); };
             const m = document.getElementById('readerModal'); m.classList.replace('hidden', 'flex');
-            
-            // Kunci scroll wadah utama
-            document.getElementById('main-scroll-wrapper').style.overflow = 'hidden';
-
             m.children[1].classList.add('translate-y-full');
             setTimeout(() => { m.children[1].style.transition='transform 0.3s ease-out'; m.children[1].classList.replace('translate-y-full','translate-y-0'); }, 10);
             lucide.createIcons();
         }
 
-        function closeReader() { 
-            document.getElementById('readerModal').classList.replace('flex', 'hidden'); 
-            // Lepas kunci scroll wadah utama
-            document.getElementById('main-scroll-wrapper').style.overflow = 'auto';
-        }
+        function closeReader() { document.getElementById('readerModal').classList.replace('flex', 'hidden'); }
 
         function adjustAdminForm() { 
             const c = document.getElementById('itemCategory').value;
@@ -443,14 +468,10 @@
                 }
             }
             m.classList.replace('hidden', 'flex'); 
-            document.getElementById('main-scroll-wrapper').style.overflow = 'hidden';
             lucide.createIcons();
         }
 
-        function closeAdminModal() { 
-            document.getElementById('adminModal').classList.replace('flex', 'hidden'); 
-            document.getElementById('main-scroll-wrapper').style.overflow = 'auto';
-        }
+        function closeAdminModal() { document.getElementById('adminModal').classList.replace('flex', 'hidden'); }
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
